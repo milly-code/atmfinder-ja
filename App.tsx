@@ -1,11 +1,51 @@
+import * as Font from 'expo-font';
+import Fonts from '@app/constants/Fonts';
 import { StatusBar } from 'expo-status-bar';
-import {  Text, View } from 'react-native';
+import { useColorScheme } from 'react-native';
+import { Text } from '@app/components/themed/Text';
+import * as SplashScreen from 'expo-splash-screen';
+import { View } from '@app/components/themed/View';
+import { useCallback, useEffect, useState } from 'react';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+
+
+SplashScreen.preventAutoHideAsync();
 
 export default function App() {
+
+  const colorScheme = useColorScheme();
+
+  const [appIsReady, setAppIsReady] = useState(false);
+  useEffect(() => {
+    const prepareAppLaunch = async () => {
+      try {
+        await Font.loadAsync(Fonts);
+      } catch (e) {
+        console.log(e);
+      } finally {
+        setAppIsReady(true);
+      }
+    }
+    prepareAppLaunch();
+  }, [])
+
+  const onLayoutRootView = useCallback(async () => {
+    if (appIsReady) {
+      await SplashScreen.hideAsync();
+    }
+  }, [appIsReady]);
+
+  if (!appIsReady) {
+    return null;
+  }
+
+
   return (
-    <View className='bg-white items-center justify-center flex-1'>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <View className='items-center justify-center flex-1' onLayout={onLayoutRootView}>
+        <Text>Open up App.tsx to start working on your app!</Text>
+        <StatusBar style="auto" />
+      </View>
+    </ThemeProvider>
   );
 }
