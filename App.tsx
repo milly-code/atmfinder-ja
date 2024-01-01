@@ -1,12 +1,12 @@
+import 'react-native-gesture-handler';
 import * as Font from 'expo-font';
 import Fonts from '@app/constants/Fonts';
-import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { View } from '@app/components/themed/View';
 import { useCallback, useEffect, useState } from 'react';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { GoogleMapView } from '@app/components/MapView/GoogleMapView';
+import { DarkTheme, DefaultTheme, NavigationContainer, ThemeProvider } from '@react-navigation/native';
+import { AppLayout } from '@app/Layout';
 
 
 SplashScreen.preventAutoHideAsync();
@@ -43,8 +43,9 @@ export default function App() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <View className='flex-1' onLayout={onLayoutRootView}>
-        <StatusBar style="auto" />
-        <GoogleMapView />
+        <NavigationContainer>
+          <AppLayout />
+        </NavigationContainer>
       </View>
     </ThemeProvider>
   );
