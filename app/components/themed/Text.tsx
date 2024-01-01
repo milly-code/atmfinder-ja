@@ -1,6 +1,6 @@
 import { TextThemeProps } from './types';
 import { Text as DefaultText } from 'react-native';
-import { useThemeColor } from '@app/hooks/useThemeColor';
+import { twMerge } from 'tailwind-merge';
 
 
 const fontFamily = {
@@ -20,8 +20,9 @@ type TextProps = TextThemeProps & {
 
 export const Text = ({ ...props }: TextProps) => {
     const { font = 'regular', componentClass = '', style, lightColor, darkColor, ...otherProps } = props;
-    const color = props.color ?? useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-    return <DefaultText style={[{ color }, { fontFamily: fontFamily[font], fontSize: 16 }, style]} className={componentClass} {...otherProps} />;
+    return <DefaultText style={[{ fontFamily: fontFamily[font], fontSize: 16 }, style]} className={
+        twMerge('text-gray-900 dark:text-gray-100', componentClass)
+    } {...otherProps} />;
 }
 
 export const HeadingText = (props: TextProps) => {
