@@ -7,6 +7,9 @@ import { View } from '@app/components/themed/View';
 import { useCallback, useEffect, useState } from 'react';
 import { DarkTheme, DefaultTheme, NavigationContainer, ThemeProvider } from '@react-navigation/native';
 import { AppLayout } from '@app/Layout';
+import { StatusBar } from 'expo-status-bar';
+import { useSecureStore } from '@app/hooks/useSecureStore';
+import strings from '@app/constants/strings';
 
 
 SplashScreen.preventAutoHideAsync();
@@ -15,27 +18,35 @@ export default function App() {
 
   const colorScheme = useColorScheme();
 
-  const [appIsReady, setAppIsReady] = useState(false);
+  const [appConfig, setAppConfig] = useState<{ appIsReady: boolean, isAppFirstLaunch: boolean }>({ appIsReady: false, isAppFirstLaunch: false });
+
+  const { getAsync, createDirectory } = useSecureStore();
+
   useEffect(() => {
     const prepareAppLaunch = async () => {
       try {
         await Font.loadAsync(Fonts);
+        await createDirectory();
       } catch (e) {
         console.log(e);
       } finally {
-        setAppIsReady(true);
+        const value = await getAsync(strings.storageKey.APP_FIRST_LAUNCH);
+        setAppConfig({
+          isAppFirstLaunch: !Boolean(value),
+          appIsReady: true
+        })
       }
     }
     prepareAppLaunch();
   }, [])
 
   const onLayoutRootView = useCallback(async () => {
-    if (appIsReady) {
+    if (appConfig.appIsReady) {
       await SplashScreen.hideAsync();
     }
-  }, [appIsReady]);
+  }, [appConfig]);
 
-  if (!appIsReady) {
+  if (!appConfig.appIsReady) {
     return null;
   }
 
@@ -43,8 +54,9 @@ export default function App() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <View className='flex-1' onLayout={onLayoutRootView}>
+        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
         <NavigationContainer>
-          <AppLayout />
+          <AppLayout isAppFirstLaunch={appConfig.isAppFirstLaunch} />
         </NavigationContainer>
       </View>
     </ThemeProvider>
