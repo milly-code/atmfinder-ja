@@ -6,6 +6,7 @@ import { SubHeading, Text } from '@app/components/themed/Text';
 import { View } from '@app/components/themed/View';
 import Colors from '@app/constants/Colors';
 import { twJoin } from 'tailwind-merge';
+import { useDeviceHeightFormModal } from '@app/hooks/useDeviceHeightFormModal';
 
 type Action = {
     onPress: () => void;
@@ -27,12 +28,12 @@ export const AlertModal: FC<Props> = (props) => {
     const colorScheme = useColorScheme() ?? 'light';
     const { primaryAction, secondaryAction, show, children, title, onBackdropPress, message, type = 'message' } = props;
 
-    const isAndroid = Platform.OS === 'android';
+    const deviceHeight = useDeviceHeightFormModal();
 
     return (
         <RNModal
             statusBarTranslucent
-            deviceHeight={isAndroid ? ((StatusBar.currentHeight ?? 0) + Dimensions.get('screen').height) : undefined}
+            deviceHeight={deviceHeight}
             onBackdropPress={onBackdropPress}
             isVisible={show}
             animationInTiming={600}
@@ -78,13 +79,13 @@ export const AlertModal: FC<Props> = (props) => {
                             (primaryAction || secondaryAction) && (
                                 <View className="flex-row w-full space-x-4 px-3 py-2 mt-5 justify-center bg-green-50 dark:bg-gray-800">
                                     {secondaryAction && (
-                                        <Pressable className='border border-red-700 rounded-lg w-1/3 px-2 py-2.5  items-center justify-center dark:border-red-500'>
-                                            <Text componentClass='uppercase text-red-700 dark:text-red-500'>Cancel</Text>
+                                        <Pressable onPress={secondaryAction.onPress} className='border border-red-700 rounded-lg w-1/3 px-2 py-2.5  items-center justify-center dark:border-red-500'>
+                                            <Text componentClass='uppercase text-red-700 dark:text-red-500'>{secondaryAction.title ?? 'Cancel'}</Text>
                                         </Pressable>
                                     )}
                                     {primaryAction && (
-                                        <Pressable className='bg-green-700 rounded-lg w-1/3 px-2 py-2.5 items-center justify-center dark:bg-green-600'>
-                                            <Text componentClass='uppercase text-white'>Enable</Text>
+                                        <Pressable onPress={primaryAction.onPress} className='bg-green-700 rounded-lg w-1/3 px-2 py-2.5 items-center justify-center dark:bg-green-600'>
+                                            <Text componentClass='uppercase text-white'>{primaryAction.title ?? 'Ok'}</Text>
                                         </Pressable>
                                     )}
                                 </View>
