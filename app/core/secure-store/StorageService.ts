@@ -13,7 +13,6 @@ export class StorageService {
         this.persistStorage = opts.persistStorage;
         this.storageFileUriKey = opts.storageFileUriKey;
         this.storageDirectoryUri = `${FileSystem.documentDirectory}${opts.persistStorage}`;
-        console.log(this.storageDirectoryUri);
         this.encryptionService = new AES();
     }
 

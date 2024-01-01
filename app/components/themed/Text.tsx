@@ -30,6 +30,10 @@ export const HeadingText = (props: TextProps) => {
     return <Text font={font} style={{ fontSize: 29 }} {...props} />
 }
 
+export const CaptionText = (props: TextProps) => {
+    return <Text style={{ fontSize: 13 }} {...props} />
+}
+
 export const SubHeading = (props: TextProps) => {
     return <Text style={{ fontSize: 20 }} {...props} />
 }
