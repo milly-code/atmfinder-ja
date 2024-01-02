@@ -10,6 +10,7 @@ import { AppLayout } from '@app/Layout';
 import { StatusBar } from 'expo-status-bar';
 import { useSecureStore } from '@app/hooks/useSecureStore';
 import strings from '@app/constants/strings';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 
 SplashScreen.preventAutoHideAsync();
@@ -55,9 +56,11 @@ export default function App() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <View className='flex-1' onLayout={onLayoutRootView}>
         <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+        <GestureHandlerRootView style={{ flex: 1 }}>
         <NavigationContainer>
           <AppLayout isAppFirstLaunch={appConfig.isAppFirstLaunch} />
         </NavigationContainer>
+        </GestureHandlerRootView>
       </View>
     </ThemeProvider>
   );
