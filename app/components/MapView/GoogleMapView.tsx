@@ -1,6 +1,6 @@
 import MapView, { Marker, PROVIDER_GOOGLE, Camera, LatLng, Region } from 'react-native-maps';
 
-import { forwardRef, PropsWithChildren } from 'react';
+import { forwardRef, PropsWithChildren, useMemo } from 'react';
 import { MapThemes } from './map-themes';
 import { FontAwesome } from '@expo/vector-icons';
 import { View } from '../themed/View';
@@ -20,6 +20,7 @@ export type MapViewType = {
     followLocation?: boolean
     userLocation?: LatLng;
     zoomEnabled?: boolean;
+    atmTypeFilter?: ATMType
 } & PropsWithChildren
 
 export const GoogleMapView = forwardRef<MapView, MapViewType>(({ ...props }, ref) => {
@@ -33,11 +34,16 @@ export const GoogleMapView = forwardRef<MapView, MapViewType>(({ ...props }, ref
 
     const colourScheme = useColorScheme() ?? 'light';
     const { defaultCamera, children, region, userLocation } = props;
-    const { followLocation = false, zoomEnabled = true, scrollEnabled = true, } = props;
+    const { followLocation = false, zoomEnabled = true, scrollEnabled = true, atmTypeFilter } = props;
 
     const mapTheme = MapThemes[colourScheme];
 
-
+    const filteredATMs = useMemo(() => {
+        if (atmTypeFilter) {
+            return atmData.filter((_atm) => _atm.atmType === atmTypeFilter)
+        }
+        return atmData;
+    }, [atmTypeFilter])
     return (
         <View className='flex-1 flex'>
             <MapView
@@ -88,7 +94,7 @@ export const GoogleMapView = forwardRef<MapView, MapViewType>(({ ...props }, ref
                 )}
 
                 {
-                    atmData.map((atm) => {
+                    filteredATMs.map((atm) => {
                         const bankLogo = Banks.find(item => item.code === atm.atmType)?.image;
                         return (
                             <Marker
@@ -101,6 +107,7 @@ export const GoogleMapView = forwardRef<MapView, MapViewType>(({ ...props }, ref
                                 }}
                                 title={atm.displayName}
                                 description={atm.shortFormattedAddress}
+
                             >
                                 {
                                     bankLogo ?
