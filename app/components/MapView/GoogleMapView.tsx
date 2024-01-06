@@ -1,113 +1,70 @@
-import MapView, { Marker, PROVIDER_GOOGLE, Camera, LatLng, Region } from 'react-native-maps';
-
-import { forwardRef, PropsWithChildren, useMemo } from 'react';
+import { Image } from 'react-native';
+import { View } from '../themed/View';
+import Banks from '@app/constants/Banks';
 import { MapThemes } from './map-themes';
 import { FontAwesome } from '@expo/vector-icons';
-import { View } from '../themed/View';
-import { atmData } from './map-view-data';
-import { Image, useColorScheme } from 'react-native';
-import Banks from '@app/constants/Banks';
+import { useColorScheme } from '@app/hooks/useColorScheme';
+import { useAppStoreState } from '@app/hooks/useAppStoreState';
+import { forwardRef, PropsWithChildren, useEffect } from 'react';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
-export type MapViewType = {
-    scrollEnabled?: boolean,
-    defaultCamera?: Camera;
-    containerStyle?: string;
-    coordinates?: {
-        latitude: number,
-        longitude: number,
-    },
-    region?: Region,
-    followLocation?: boolean
-    userLocation?: LatLng;
-    zoomEnabled?: boolean;
-    atmTypeFilter?: ATMType
-} & PropsWithChildren
 
-export const GoogleMapView = forwardRef<MapView, MapViewType>(({ ...props }, ref) => {
-    const DEFAULT_REGION = {
-        //Jamaica
-        latitude: 17.77027018441539,
-        longitude: -77.18976974487305,
-        latitudeDelta: 4.550155938686251,
-        longitudeDelta: 2.274669148027897,
-    }
 
-    const colourScheme = useColorScheme() ?? 'light';
-    const { defaultCamera, children, region, userLocation } = props;
-    const { followLocation = false, zoomEnabled = true, scrollEnabled = true, atmTypeFilter } = props;
+const DEFAULT_REGION = {
+    //Jamaica
+    latitude: 17.77027018441539,
+    longitude: -77.18976974487305,
+    latitudeDelta: 4.550155938686251,
+    longitudeDelta: 2.274669148027897,
+}
+type MapViewProps = PropsWithChildren & { onMapLoaded?: () => void }
+export const GoogleMapView = forwardRef<MapView, MapViewProps>(({ ...props }, ref) => {
+    const { children, onMapLoaded } = props;
+    const { colourScheme } = useColorScheme();
+    const { clearViewingAtm, atms, viewAtm, fetchAtmData, filteredAtmType } = useAppStoreState();
 
-    const mapTheme = MapThemes[colourScheme];
 
-    const filteredATMs = useMemo(() => {
-        if (atmTypeFilter) {
-            return atmData.filter((_atm) => _atm.atmType === atmTypeFilter)
-        }
-        return atmData;
-    }, [atmTypeFilter])
+    useEffect(() => {
+        fetchAtmData();
+    }, []);
+
+    const filtered = filteredAtmType ? atms.filter((atm) => atm.atmType === filteredAtmType) : atms;
+
+
     return (
         <View className='flex-1 flex'>
             <MapView
                 ref={ref}
-                scrollEnabled={scrollEnabled}
-                followsUserLocation={followLocation}
-                zoomControlEnabled={false}
-                showsIndoors={false}
                 showsCompass={false}
-                showsPointsOfInterest={false}
-                showsTraffic={false}
-                showsBuildings={false}
+                scrollEnabled={true}
+                followsUserLocation={true}
+                zoomControlEnabled={false}
                 showsMyLocationButton={false}
-                showsUserLocation={false}
-                zoomEnabled={zoomEnabled}
-                showsScale={true}
-                camera={defaultCamera}
+                showsUserLocation={true}
+                zoomEnabled={true}
                 provider={PROVIDER_GOOGLE}
                 style={{ flex: 1 }}
-                customMapStyle={mapTheme}
-                region={region ?? DEFAULT_REGION}
-                onUserLocationChange={(props) => {
-                    // console.log(props.nativeEvent.coordinate, props.nativeEvent.error);
-                }}
-                onMapLoaded={() => {
-                }}
-                onRegionChange={({ latitude, longitude, latitudeDelta, longitudeDelta }, { isGesture }) => {
-                    // console.log(latitudeDelta, longitudeDelta)
-                    if (isGesture) {
-                    } else {
-                    }
-                }}
-            >
-                {userLocation && (
-                    <Marker
-                        coordinate={{
-                            latitude: userLocation.latitude,
-                            longitude: userLocation.longitude,
-                        }}
-                        title="You"
-                        tracksViewChanges={false}
-                    >
-                        <View className='bg-red-500 border border-white flex h-6 w-6 rounded-full items-center justify-center'>
-                            <FontAwesome name='location-arrow' color={"white"} size={15} />
-                        </View>
+                customMapStyle={MapThemes[colourScheme]}
+                region={DEFAULT_REGION}
+                onPress={clearViewingAtm}
+                onMapReady={onMapLoaded}
 
-                    </Marker>
-                )}
+            >
 
                 {
-                    filteredATMs.map((atm) => {
+                    filtered.map((atm, index) => {
                         const bankLogo = Banks.find(item => item.code === atm.atmType)?.image;
+                        // TODO: if atm data is corrupt then I need to catch those.
                         return (
                             <Marker
                                 tracksViewChanges={false}
                                 tracksInfoWindowChanges={false}
-                                key={atm.id}
+                                key={`${atm.id}_${index}`}
                                 coordinate={{
                                     latitude: atm.latitude,
                                     longitude: atm.longitude,
                                 }}
-                                title={atm.displayName}
-                                description={atm.shortFormattedAddress}
-
+                                onPress={() => viewAtm(atm)}
                             >
                                 {
                                     bankLogo ?
