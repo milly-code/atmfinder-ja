@@ -63,6 +63,7 @@ export const MapScreen = () => {
         if (status !== "granted") {
             return;
         }
+        await animateToUserLocation();
     };
 
     const animateToUserLocation = async () => {
@@ -85,7 +86,6 @@ export const MapScreen = () => {
                 }
             }
         }
-        console.log("Animating to position");
         const { coords } = await getLocationWithRetry()
         //await getCurrentPositionAsync({ accuracy: LocationAccuracy.Highest });
         console.log("Got position", JSON.stringify(coords));
