@@ -1,22 +1,19 @@
-import { TransitionSpecs, createStackNavigator } from "@react-navigation/stack";
-import { useCardStyleInterpolator } from "./hooks/useCardStyleInterpolator";
 import { MapScreen } from "./screens/MapScreen";
-import { FC } from "react";
-import { WelcomeScreen } from "./screens/WelcomeScreen";
+import { useCardStyleInterpolator } from "./hooks/useCardStyleInterpolator";
+import { TransitionSpecs, createStackNavigator } from "@react-navigation/stack";
 
 type AppRoutes = {
     map: undefined;
-    welcome: undefined;
 }
 
 
 const AppNavigator = createStackNavigator<AppRoutes>();
 
-export const AppLayout: FC<{ isAppFirstLaunch: boolean }> = ({ isAppFirstLaunch }) => {
-
+//TODO: navigator no longer needed. Remove.
+export const AppLayout = () => {
     return (
         <AppNavigator.Navigator
-            initialRouteName={isAppFirstLaunch ? 'welcome' : 'map'}
+            initialRouteName="map"
             screenOptions={{
                 gestureEnabled: false,
                 gestureDirection: 'horizontal-inverted',
@@ -28,11 +25,6 @@ export const AppLayout: FC<{ isAppFirstLaunch: boolean }> = ({ isAppFirstLaunch 
                 headerShown: false,
             }}
         >
-            {
-                isAppFirstLaunch && (
-                    <AppNavigator.Screen name="welcome" component={WelcomeScreen} />
-                )
-            }
             <AppNavigator.Screen name="map" component={MapScreen} />
         </AppNavigator.Navigator>
     )
