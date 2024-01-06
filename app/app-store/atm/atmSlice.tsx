@@ -3,7 +3,7 @@ import { AtmDataState } from "./types";
 import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import firebase, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 import { toast } from '@backpackapp-io/react-native-toast';
-import moment from "moment";
+import moment from "moment-timezone";
 import { ErrorToast, InfoToast, PromiseToast, SuccessToast } from "@app/components/Toasts";
 
 type ATMCollectionRef = FirebaseFirestoreTypes.CollectionReference<ATM & {
@@ -64,6 +64,9 @@ const atmSlicer = createSlice({
                     // toast.dismiss();
                     // toast.success("ATM Statuses updated.", { duration: 4000 });
                     state.data = action.payload;
+                    if (state.selectedAtm) {
+                        state.selectedAtm = action.payload.find((atm) => atm.id === state.selectedAtm?.id)
+                    }
                 }
             );
     },
@@ -106,7 +109,7 @@ export const fetchAtmDataAsync = createAsyncThunk<ATM[], undefined>(
             error: (err) => {
                 console.log(err);
                 return "Unable to retrieve updated ATMs at this time. Try again, and if the issue persists contact support.";
-            } ,
+            },
             success: "ATM Statuses updated.",
             loading: "Map data updating. Please wait...",
         }, {
@@ -126,9 +129,16 @@ export const fetchAtmDataAsync = createAsyncThunk<ATM[], undefined>(
 
         return documentCollection.docs.map((doc) => {
             const atm = doc.data();
-            const lastSubmissionAt = atm.lastSubmissionAt ?
-                moment().startOf('date').from(new Date((atm.lastSubmissionAt as FirebaseFirestoreTypes.Timestamp).seconds * 1000))
-                : undefined;
+            let lastSubmissionAt: string | undefined = undefined;
+            try {
+                if (atm.lastSubmissionAt) {
+                    const dt = moment(atm.lastSubmissionAt.toDate());
+                    lastSubmissionAt = dt.tz('America/Jamaica').fromNow();
+                }
+            } catch (e) {
+                //Invalid firebase time;
+            }
+
             return {
                 id: doc.id,
                 displayName: atm.displayName,

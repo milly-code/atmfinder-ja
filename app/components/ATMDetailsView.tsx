@@ -59,6 +59,7 @@ const BasicDetailsView: FC<DetailsProps> = (props) => {
             openMapLink();
         }
     }
+
     const truncate = (str: string, length = 23) => str.length > length ? str.slice(0, length) + '...' : str;
     //bg-blue-700 dark:bg-blue-600
     return (
@@ -109,9 +110,11 @@ const BasicDetailsView: FC<DetailsProps> = (props) => {
 }
 
 
-
-const UpdateAtmStatusForm: FC<{ atmStatus?: ATMStatus, id?: string }> = ({ atmStatus, id }) => {
-    const { close } = useBottomSheet();
+type FormProps = {
+    atmStatus?: ATMStatus;
+    id?: string;
+};
+const UpdateAtmStatusForm: FC<FormProps> = ({ atmStatus, id }) => {
     const [selectedStatus, setSelectedStatus] = useState<ATMStatus | undefined>(atmStatus);
     const atmStatuses: ATMStatus[] = ["Working", "Not Working", "Out of Cash", "Works But Takes Forever", "No Longer at Listed Location"];
     const [isBusy, setIsBusy] = useState<boolean>(false);
@@ -119,16 +122,11 @@ const UpdateAtmStatusForm: FC<{ atmStatus?: ATMStatus, id?: string }> = ({ atmSt
 
     const onSubmit = async () => {
         if (selectedStatus && id) {
-
-
-
             setIsBusy(true);
-            // const toastId = toast.loading('ATM Status updating...');
             try {
-                const currentDate = new Date(Date.now());
-                const document = firebase().collection('atms').doc(id);
-                // await ;
 
+                const currentDate = firebase.Timestamp.now().toDate();
+                const document = firebase().collection('atms').doc(id);
                 await toast.promise(document.update({
                     statusInfo: selectedStatus,
                     lastSubmissionAt: currentDate
@@ -154,22 +152,7 @@ const UpdateAtmStatusForm: FC<{ atmStatus?: ATMStatus, id?: string }> = ({ atmSt
                     }
                 });
 
-                // toast.dismiss(toastId);
-                // toast.success("Thanks for submitting! Eact contribution helps to keep you and the community up to date.");
-                // TODO: need to update the current viewing ATM instead of closing the bottomsheet. 
-                // This way user sees the update before the fetch finish;
-                // const atm: ATM & {
-                //     lastSubmissionAt?: FirebaseFirestoreTypes.Timestamp;
-                // } | undefined = (await document.get()).data() as ATM & {
-                //     lastSubmissionAt?: FirebaseFirestoreTypes.Timestamp;
-                // } | undefined;
 
-                // if (!atm) {
-                //     //TODO: don't want to throw error here.
-                //     throw new Error("Hmm... Unexpected error occured. Try again, and if the issue persists contact support.");
-                // }
-
-                close();
                 fetchAtmData();
             } catch (e) {
                 console.log(e);
