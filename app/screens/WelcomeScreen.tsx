@@ -1,26 +1,29 @@
-import { ButtonPrimary } from "@app/components/themed/Buttons";
-import { HeadingText, SubHeading, CaptionText } from "@app/components/themed/Text"
-import { View } from "@app/components/themed/View";
+import { FC, useState } from "react";
+import Constants from "expo-constants";
 import Colors from "@app/constants/Colors";
-import strings from "@app/constants/strings";
-import { useSecureStore } from "@app/hooks/useSecureStore";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import Constants from "expo-constants"
-import { FC } from "react";
 import { useColorScheme } from "react-native";
+import auth from '@react-native-firebase/auth';
+import { View } from "@app/components/themed/View";
+import { toast } from "@backpackapp-io/react-native-toast";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { ButtonPrimary } from "@app/components/themed/Buttons";
+import { HeadingText, SubHeading, CaptionText } from "@app/components/themed/Text";
 
-type Props = NativeStackScreenProps<{ map: undefined, welcome: undefined }, 'welcome'>;
-
-export const WelcomeScreen: FC<Props> = ({ navigation: { replace } }) => {
+export const WelcomeScreen: FC = () => {
     const colourScheme = useColorScheme() ?? 'light';
-    const { setAsync } = useSecureStore();
-    const goToMapView = async () => {
-        await setAsync(strings.storageKey.APP_FIRST_LAUNCH, 'true');
-        replace('map');
+    const [busy, setBusy] = useState<boolean>(false);
+
+    const attemptAnonymousSignIn = async () => {
+        setBusy(true);
+        auth()
+            .signInAnonymously()
+            .catch((err) => {
+                toast.error("Hmm... Unexpected error occured. Try again, and if the issue persists contact support.")
+                console.log(err);
+            });
     }
     return (
-        <View className="flex-1 justify-between py-4 items-center">
+        <View className="flex-1 justify-between py-5 items-center h-screen">
             <View className="w-full flex-col flex-1 items-center justify-center space-y-24">
                 <View className="flex-col items-center justify-center space-y-9">
                     <HeadingText>ATMFinder JA </HeadingText>
@@ -56,10 +59,10 @@ export const WelcomeScreen: FC<Props> = ({ navigation: { replace } }) => {
                 </View>
 
                 <View className="w-10/12">
-                    <ButtonPrimary onPress={goToMapView}>Continue</ButtonPrimary>
+                    <ButtonPrimary onPress={attemptAnonymousSignIn} isBusy={busy}>Continue</ButtonPrimary>
                 </View>
             </View>
-            <CaptionText componentClass="text-gray-400 dark: text-gray-500">Version: {Constants.expoConfig?.version}</CaptionText>
+            <CaptionText componentClass="text-gray-700 dark:text-gray-500">Version: {Constants.expoConfig?.version}</CaptionText>
         </View>
     )
 }
