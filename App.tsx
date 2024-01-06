@@ -1,67 +1,70 @@
-import 'react-native-gesture-handler';
 import * as Font from 'expo-font';
-import Fonts from '@app/constants/Fonts';
-import { useColorScheme } from 'react-native';
-import * as SplashScreen from 'expo-splash-screen';
-import { View } from '@app/components/themed/View';
-import { useCallback, useEffect, useState } from 'react';
-import { DarkTheme, DefaultTheme, NavigationContainer, ThemeProvider } from '@react-navigation/native';
+import 'react-native-gesture-handler';
+import { Provider } from 'react-redux';
 import { AppLayout } from '@app/Layout';
-import { StatusBar } from 'expo-status-bar';
-import { useSecureStore } from '@app/hooks/useSecureStore';
-import strings from '@app/constants/strings';
+import Fonts from '@app/constants/Fonts';
+import { atmStore } from '@app/app-store';
+import { useEffect, useState } from 'react';
+import { View } from '@app/components/themed/View';
+import { WelcomeScreen } from '@app/screens/WelcomeScreen';
+import { useColorScheme } from '@app/hooks/useColorScheme';
+import { SplashScreen } from '@app/components/SplashScreen';
+import { Toasts } from '@backpackapp-io/react-native-toast';
+import { StatusBar } from '@app/components/themed/StatusBar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import { DarkTheme, DefaultTheme, NavigationContainer, ThemeProvider } from '@react-navigation/native';
 
-
-SplashScreen.preventAutoHideAsync();
+type AuthUser = FirebaseAuthTypes.User | null;
 
 export default function App() {
-
-  const colorScheme = useColorScheme();
-
-  const [appConfig, setAppConfig] = useState<{ appIsReady: boolean, isAppFirstLaunch: boolean }>({ appIsReady: false, isAppFirstLaunch: false });
-
-  const { getAsync, createDirectory } = useSecureStore();
-
-  useEffect(() => {
-    const prepareAppLaunch = async () => {
-      try {
-        await Font.loadAsync(Fonts);
-        await createDirectory();
-      } catch (e) {
-        console.log(e);
-      } finally {
-        const value = await getAsync(strings.storageKey.APP_FIRST_LAUNCH);
-        setAppConfig({
-          isAppFirstLaunch: !Boolean(value),
-          appIsReady: true
-        })
-      }
-    }
-    prepareAppLaunch();
-  }, [])
-
-  const onLayoutRootView = useCallback(async () => {
-    if (appConfig.appIsReady) {
-      await SplashScreen.hideAsync();
-    }
-  }, [appConfig]);
-
-  if (!appConfig.appIsReady) {
-    return null;
-  }
+	const { colourScheme } = useColorScheme();
+	const [fonstLoaded, _] = Font.useFonts(Fonts);
+	const [appIsReady, setAppIsReady] = useState<boolean>(false);
+	const [authUser, setAuthUser] = useState<AuthUser>();
 
 
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <View className='flex-1' onLayout={onLayoutRootView}>
-        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-        <GestureHandlerRootView style={{ flex: 1 }}>
-        <NavigationContainer>
-          <AppLayout isAppFirstLaunch={appConfig.isAppFirstLaunch} />
-        </NavigationContainer>
-        </GestureHandlerRootView>
-      </View>
-    </ThemeProvider>
-  );
+	const onAuthStateChanged = (user: AuthUser) => {
+		setAuthUser(user);
+		if (!appIsReady) {
+			setAppIsReady(true);
+		}
+	}
+
+	useEffect(() => {
+		const authSubscription = auth().onAuthStateChanged(onAuthStateChanged);
+		return authSubscription;
+	}, []);
+
+	if (!appIsReady || !fonstLoaded) {
+		return <SplashScreen />
+	}
+
+
+	return (
+		<ThemeProvider value={colourScheme === 'dark' ? DarkTheme : DefaultTheme}>
+			<SafeAreaProvider>
+				<StatusBar />
+				<View className='h-screen'>
+					<Provider store={atmStore}>
+						<GestureHandlerRootView style={{ flex: 1 }}>
+							{
+								authUser ? (
+									<NavigationContainer>
+										<AppLayout />
+									</NavigationContainer>
+								) : (
+									<WelcomeScreen />
+								)
+							}
+							<Toasts />
+						</GestureHandlerRootView>
+					</Provider>
+				</View>
+			</SafeAreaProvider>
+		</ThemeProvider>
+	);
 }
+
+
