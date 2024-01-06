@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { View } from "@app/components/themed/View";
 import { Pressable, StatusBar } from "react-native";
 import GorhomBottomSheet from '@gorhom/bottom-sheet';
+import { getUserCurrentLocation } from "@app/helpers";
 import GoogleMap, { Region } from "react-native-maps";
 import { ATMKeyView } from "@app/components/ATMKeyView";
 import { ActionMenu } from "@app/components/ActionMenu";
@@ -68,33 +69,21 @@ export const MapScreen = () => {
 
     const animateToUserLocation = async () => {
 
-        async function getLocationWithRetry(retries = 3): Promise<LocationObject> {
-            // This is a hack because sometimes the getCurrentPositionAsync hangs
-            // thus not updating user location
-            // Check this out https://github.com/expo/expo/issues/15478
-            const timeout = new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error('Timeout exceeded')), 5000)
-            );
-            try {
-                return await Promise.race([getCurrentPositionAsync({ accuracy: LocationAccuracy.Highest }), timeout]) as LocationObject;
-            } catch (error) {
-                if (retries > 0) {
-                    console.log("retrying");
-                    return getLocationWithRetry(retries - 1);
-                } else {
-                    throw error;
-                }
-            }
+        try {
+            const { coords } = await getUserCurrentLocation();
+
+            setCurrentLocation({
+                latitude: coords.latitude,
+                longitude: coords.longitude,
+                latitudeDelta: LATITUDE_DELTA,
+                longitudeDelta: LONGITUDE_DELTA
+            });
+        } catch (e) {
+            // unable to get user's location :(
+            //TODO: find a package to replace expo location. 
+            // Maybe use the onLocationChanged from the mapview to update the location.
+
         }
-        const { coords } = await getLocationWithRetry()
-        //await getCurrentPositionAsync({ accuracy: LocationAccuracy.Highest });
-        console.log("Got position", JSON.stringify(coords));
-        setCurrentLocation({
-            latitude: coords.latitude,
-            longitude: coords.longitude,
-            latitudeDelta: LATITUDE_DELTA,
-            longitudeDelta: LONGITUDE_DELTA
-        });
     }
 
     useEffect(() => {
