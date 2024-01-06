@@ -1,50 +1,31 @@
-import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { ATMType } from "@types";
 import { forwardRef } from 'react';
-import { SubHeading, Text } from './themed/Text';
 import { View } from './themed/View';
-import Colors from '@app/constants/Colors';
-import { Image, Pressable, useColorScheme } from 'react-native';
 import Banks from '@app/constants/Banks';
-import { twJoin } from 'tailwind-merge';
-
+import { Image, Pressable } from 'react-native';
+import { SubHeading, Text } from './themed/Text';
+import { BottomSheet } from './themed/BottomSheet';
+import GorhomBottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 
 type ATMKeyViewProps = {
-    filterAtmByCode?: (code: ATMType) => void;
+    onBankPressed?: (code: ATMType) => void;
 }
 
-export const ATMKeyView = forwardRef<BottomSheet, ATMKeyViewProps>(({ filterAtmByCode }, bottomSheetRef) => {
-    const colourScheme = useColorScheme() ?? 'light';
-    const dismiss = (code: ATMType) => {
-        if (filterAtmByCode) {
-            filterAtmByCode(code);
-        }
-    }
+
+export const ATMKeyView = forwardRef<GorhomBottomSheet, ATMKeyViewProps>(({ onBankPressed = () => { } }, bottomSheetRef) => {
 
     return (
-        <BottomSheet
-            ref={bottomSheetRef}
-            index={-1}
-            snapPoints={['70%']}
-            style={{}}
-            enablePanDownToClose
-            backgroundStyle={{ backgroundColor: Colors[colourScheme].background }}
-            handleComponent={() => <View className='flex flex-col items-center mt-2'><View className='h-1 rounded-sm w-7 bg-gray-900 dark:bg-gray-500 mb-3'></View></View>}
-        >
+        <BottomSheet ref={bottomSheetRef} snapPoints={['70%']} enablePanDownToClose>
             <View className='flex-col items-center'>
                 <SubHeading>ATM Keys</SubHeading>
             </View>
-            <BottomSheetScrollView>
-                <View className="flex-col justify-center space-y-3 my-5 w-full px-4">
+            <BottomSheetScrollView showsVerticalScrollIndicator={false}>
+                <View className="flex-col justify-center my-5 w-full px-4 divide-y divide-gray-200/80 dark:divide-gray-500">
                     {
                         Banks.map(({ bank, image, code }, index) => {
                             return (
-                                <Pressable key={index} onPress={() => dismiss(code)}>
-                                    <View className={
-                                        twJoin(
-                                            "flex-row justify-between px-2 pb-4 pt-2 items-center",
-                                            index + 1 === Banks.length ? '' : 'border-b border-gray-500'
-                                        )
-                                    }>
+                                <Pressable key={index} onPress={() => onBankPressed(code)} className='py-3.5'>
+                                    <View className="flex-row justify-between px-2 items-center ">
                                         <Text style={{ fontSize: 18 }}>{bank}</Text>
                                         <Image
                                             source={image}
