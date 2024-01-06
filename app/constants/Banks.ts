@@ -1,10 +1,12 @@
+import { ATMType } from "@types";
+
 type Bank = {
-    bank: string; 
-    image: any, 
+    bank: string;
+    image: any,
     code: ATMType
 }
 
-const banks: Bank[] =  [
+const banks: Bank[] = [
     {
         bank: "Scotiabank",
         image: require("../../assets/banks/bns-2.png"),
