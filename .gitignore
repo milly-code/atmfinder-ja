@@ -39,3 +39,4 @@ credentials.json
 eas.json
 firebaseConfig.js
 google-services.json
+debug.keystore
