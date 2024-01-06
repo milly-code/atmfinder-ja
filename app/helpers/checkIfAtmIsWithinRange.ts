@@ -1,5 +1,5 @@
 import { LatLng } from "react-native-maps";
-import { getUserCurrentLocation } from "./getLocationWithRetry";
+import { getUserCurrentLocation } from "./getUserCurrentLocation";
 import { PermissionStatus, getForegroundPermissionsAsync } from "expo-location";
 
 const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
