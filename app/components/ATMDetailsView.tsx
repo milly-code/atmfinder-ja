@@ -12,6 +12,7 @@ import { createOpenLink } from 'react-native-open-maps';
 import { toast } from "@backpackapp-io/react-native-toast";
 import { CaptionText, SubHeading, Text } from "./themed/Text";
 import { useAppStoreState } from "@app/hooks/useAppStoreState";
+import { checkIfAtmIsWithinRange, truncate } from "@app/helpers";
 import { ErrorToast, InfoToast, PromiseToast, SuccessToast } from "./Toasts";
 import GorhomBottomSheet, { BottomSheetScrollView, useBottomSheet } from "@gorhom/bottom-sheet";
 
@@ -33,18 +34,25 @@ export const ATMDetailsView = forwardRef<GorhomBottomSheet>((_, bottomSheetRef) 
             onClose={clearViewingAtm}
             onChange={onBottomSheetChange}
         >
-            <BasicDetailsView expanded={expanded} {...viewingAtm} />
+            <BasicDetailsView atm={viewingAtm} expanded={expanded} />
         </BottomSheet>
     )
 })
 
 
-type DetailsProps = Partial<ATM> & { expanded: boolean };
+type DetailsProps = {
+    atm?: ATM;
+    expanded: boolean;
+};
 
 const BasicDetailsView: FC<DetailsProps> = (props) => {
-    const { isOnline, lastSubmissionAt, expanded, displayName, shortFormattedAddress, statusInfo, latitude, longitude, id } = props;
-
     const { expand } = useBottomSheet();
+    const { expanded, atm } = props;
+    if (!atm) {
+        return null;
+    }
+
+    const { isOnline, lastSubmissionAt, displayName, shortFormattedAddress, statusInfo, latitude, longitude, id } = atm;
 
     const onIconPressed = () => {
         if (!expanded) {
@@ -60,8 +68,6 @@ const BasicDetailsView: FC<DetailsProps> = (props) => {
         }
     }
 
-    const truncate = (str: string, length = 23) => str.length > length ? str.slice(0, length) + '...' : str;
-    //bg-blue-700 dark:bg-blue-600
     return (
         <BottomSheetScrollView>
             <View className='flex-col px-5 space-y-2'>
@@ -101,7 +107,16 @@ const BasicDetailsView: FC<DetailsProps> = (props) => {
                             </View>
                         </View>
                     ) : (
-                        <View><UpdateAtmStatusForm atmStatus={statusInfo} id={id} /></View>
+                        <View>
+                            <UpdateAtmStatusForm
+                                atmStatus={statusInfo}
+                                id={id}
+                                cords={{
+                                    latitude: latitude,
+                                    longitude: longitude,
+                                }}
+                            />
+                        </View>
                     )
                 }
             </View>
@@ -111,18 +126,44 @@ const BasicDetailsView: FC<DetailsProps> = (props) => {
 
 
 type FormProps = {
-    atmStatus?: ATMStatus;
-    id?: string;
+    atmStatus: ATMStatus;
+    id: string;
+    cords: {
+        latitude: number;
+        longitude: number;
+    }
 };
-const UpdateAtmStatusForm: FC<FormProps> = ({ atmStatus, id }) => {
-    const [selectedStatus, setSelectedStatus] = useState<ATMStatus | undefined>(atmStatus);
+const UpdateAtmStatusForm: FC<FormProps> = ({ atmStatus, id, cords }) => {
+    const [selectedStatus, setSelectedStatus] = useState<ATMStatus>(atmStatus);
+    const { collapse } = useBottomSheet();
     const atmStatuses: ATMStatus[] = ["Working", "Not Working", "Out of Cash", "Works But Takes Forever", "No Longer at Listed Location"];
     const [isBusy, setIsBusy] = useState<boolean>(false);
     const { fetchAtmData } = useAppStoreState();
 
     const onSubmit = async () => {
-        if (selectedStatus && id) {
-            setIsBusy(true);
+        setIsBusy(true);
+        const rangeStatus = await checkIfAtmIsWithinRange(cords);
+        if (rangeStatus !== 'within-range') {
+            if (rangeStatus === 'location-disabled') {
+                toast.error("Sorry, you need to enable location to update an ATM status.", {
+                    customToast: (props) => <ErrorToast {...props} customHeight="h-[65px]" />
+                })
+            }
+            else if (rangeStatus === 'not-in-range') {
+                toast.error("Sorry, you need to be in proximity of the ATM to update its status. ", {
+                    customToast: (props) => <ErrorToast {...props} customHeight="h-[65px]" />
+                })
+            }
+            else if (rangeStatus === 'error') {
+                toast.error("Unable to update ATM status at this time. Try again, and if the issue persists contact support.", { duration: 10000, customToast: (props) => <ErrorToast {...props} customHeight='h-[90px]' /> });
+            }
+            collapse();
+            return;
+        }
+
+
+        if (selectedStatus) {
+
             try {
 
                 const currentDate = firebase.Timestamp.now().toDate();
@@ -178,9 +219,7 @@ const UpdateAtmStatusForm: FC<FormProps> = ({ atmStatus, id }) => {
                             <View className="flex-row justify-between px-2 items-center py-2.5" key={index}>
                                 <Text style={{ fontSize: 18 }}>{atmStatus}</Text>
                                 <ToggleSwitch handleOnPress={() => {
-                                    if (selectedStatus === atmStatus) {
-                                        setSelectedStatus(undefined);
-                                    } else {
+                                    if (selectedStatus !== atmStatus) {
                                         setSelectedStatus(atmStatus);
                                     }
                                 }} isActive={selectedStatus === atmStatus} />
