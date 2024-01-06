@@ -1,11 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
-import { FC, PropsWithChildren } from 'react';
-import { Pressable, useColorScheme, Dimensions, StatusBar, Platform, NativeModules } from 'react-native';
-import RNModal from 'react-native-modal';
-import { SubHeading, Text } from '@app/components/themed/Text';
-import { View } from '@app/components/themed/View';
-import Colors from '@app/constants/Colors';
 import { twJoin } from 'tailwind-merge';
+import RNModal from 'react-native-modal';
+import { Pressable } from 'react-native';
+import { FC, PropsWithChildren } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { View } from '@app/components/themed/View';
+import { useColorScheme } from '@app/hooks/useColorScheme';
+import { SubHeading, Text } from '@app/components/themed/Text';
 import { useDeviceHeightFormModal } from '@app/hooks/useDeviceHeightFormModal';
 
 type Action = {
@@ -25,7 +25,7 @@ type Props = {
 } & PropsWithChildren
 
 export const AlertModal: FC<Props> = (props) => {
-    const colorScheme = useColorScheme() ?? 'light';
+    const { themeColours } = useColorScheme();
     const { primaryAction, secondaryAction, show, children, title, onBackdropPress, message, type = 'message' } = props;
 
     const deviceHeight = useDeviceHeightFormModal();
@@ -42,7 +42,7 @@ export const AlertModal: FC<Props> = (props) => {
             {
                 type !== 'message' && (
                     <View className='h-14 w-14 rounded-full bg-green-50 dark:bg-gray-800 border border-green-800 items-center justify-center relative mx-auto top-5 z-10'>
-                        <Ionicons name='information-outline' color={Colors[colorScheme].success} size={25} />
+                        <Ionicons name='information-outline' color={themeColours.success} size={25} />
                     </View>
                 )
             }
