@@ -11,10 +11,13 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "declaration": true,
-    "baseUrl": "./app",
+    "baseUrl": "./",
     "paths": {
       "@app/*": [
-        "./*"
+        "./app/*"
+      ],
+      "@types/*": [
+        "./@types/*"
       ]
     }
   },
