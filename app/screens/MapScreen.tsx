@@ -1,65 +1,119 @@
+import { ATMType } from "@types";
 import { useEffect, useRef, useState } from "react";
-import { AlertModal } from "@app/components/Modals/AlertModal";
-import { GoogleMapView } from "@app/components/MapView/GoogleMapView";
-import GoogleMap, { Region } from "react-native-maps";
-import { getForegroundPermissionsAsync, requestForegroundPermissionsAsync, getCurrentPositionAsync, PermissionStatus } from "expo-location";
-import { Pressable, StatusBar, useColorScheme } from "react-native";
 import { View } from "@app/components/themed/View";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import Colors from "@app/constants/Colors";
+import { Pressable, StatusBar } from "react-native";
+import GorhomBottomSheet from '@gorhom/bottom-sheet';
+import GoogleMap, { Region } from "react-native-maps";
 import { ATMKeyView } from "@app/components/ATMKeyView";
-import BottomSheet from '@gorhom/bottom-sheet';
 import { ActionMenu } from "@app/components/ActionMenu";
+import { useColorScheme } from "@app/hooks/useColorScheme";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { useAppStoreState } from "@app/hooks/useAppStoreState";
+import { AlertModal } from "@app/components/Modals/AlertModal";
+import { ATMDetailsView } from "@app/components/ATMDetailsView";
+import { GoogleMapView } from "@app/components/MapView/GoogleMapView";
+import { getForegroundPermissionsAsync, requestForegroundPermissionsAsync, getCurrentPositionAsync, PermissionStatus, LocationAccuracy, LocationObject, } from "expo-location";
 
+
+const LATITUDE_DELTA = 0.052;
+const LONGITUDE_DELTA = 0.026;
 export const MapScreen = () => {
-
-    const _atmKeyBottomSheetRef = useRef<BottomSheet>(null);
-    const _actionMenuBottomSheetRef = useRef<BottomSheet>(null);
-
+    const _atmKeyBottomSheetRef = useRef<GorhomBottomSheet>(null);
+    const _actionMenuBottomSheetRef = useRef<GorhomBottomSheet>(null);
+    const _atmDetailsBottomSheetRef = useRef<GorhomBottomSheet>(null);
     const _mapViewRef = useRef<GoogleMap>(null);
-    const [permissionStatus, setPermissionStatus] = useState<PermissionStatus>();
 
+    const { themeColours } = useColorScheme();
+    const { clearViewingAtm, viewingAtm, filteredAtmType, clearAtmFilterType, setAtmTypeFilter, fetchAtmData } = useAppStoreState();
+
+    const filterAtmsByCode = (code: ATMType) => {
+        setAtmTypeFilter(code);
+        _atmKeyBottomSheetRef.current?.close();
+    }
+
+    const expandBottomSheet = (type: 'action-menu' | 'atm-keys') => {
+        clearViewingAtm();
+        _atmDetailsBottomSheetRef.current?.close();
+        if (type === 'action-menu') {
+            _atmKeyBottomSheetRef.current?.close();
+            _actionMenuBottomSheetRef.current?.expand();
+        } else if (type === 'atm-keys') {
+            _actionMenuBottomSheetRef.current?.close();
+            _atmKeyBottomSheetRef.current?.expand();
+        }
+    }
+
+    useEffect(() => {
+        if (viewingAtm) {
+            _atmDetailsBottomSheetRef.current?.snapToIndex(0);
+            _atmKeyBottomSheetRef.current?.close();
+            _actionMenuBottomSheetRef.current?.close();
+        }
+        else {
+            _atmDetailsBottomSheetRef.current?.close();
+        }
+    }, [viewingAtm])
+
+    const [permissionStatus, setPermissionStatus] = useState<PermissionStatus>();
     const [currentLocation, setCurrentLocation] = useState<Region>();
 
-    const getLocation = async () => {
-        const { status } = await requestForegroundPermissionsAsync();
+    const requestUserLocationPermission = async () => {
+        let { status } = await requestForegroundPermissionsAsync();
         setPermissionStatus(status);
         if (status !== "granted") {
             return;
         }
-        const { coords } = await getCurrentPositionAsync();
+    };
 
+    const animateToUserLocation = async () => {
+
+        async function getLocationWithRetry(retries = 3): Promise<LocationObject> {
+            // This is a hack because sometimes the getCurrentPositionAsync hangs
+            // thus not updating user location
+            // Check this out https://github.com/expo/expo/issues/15478
+            const timeout = new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error('Timeout exceeded')), 5000)
+            );
+            try {
+                return await Promise.race([getCurrentPositionAsync({ accuracy: LocationAccuracy.Highest }), timeout]) as LocationObject;
+            } catch (error) {
+                if (retries > 0) {
+                    console.log("retrying");
+                    return getLocationWithRetry(retries - 1);
+                } else {
+                    throw error;
+                }
+            }
+        }
+        console.log("Animating to position");
+        const { coords } = await getLocationWithRetry()
+        //await getCurrentPositionAsync({ accuracy: LocationAccuracy.Highest });
+        console.log("Got position", JSON.stringify(coords));
         setCurrentLocation({
             latitude: coords.latitude,
             longitude: coords.longitude,
-            latitudeDelta: 0.052,
-            longitudeDelta: 0.026
+            latitudeDelta: LATITUDE_DELTA,
+            longitudeDelta: LONGITUDE_DELTA
         });
-    };
+    }
 
     useEffect(() => {
+        // On first lauch the location permission should be undetermined;
+        // if this is the case then we want to show the message for requesting permission
         let mounted = true;
-
         const checkIfUserHasLocationPermissionTurnedOn = async () => {
             if (!mounted) {
                 return;
             }
             const { status } = await getForegroundPermissionsAsync();
-            if (status === PermissionStatus.GRANTED) {
-                const { coords } = await getCurrentPositionAsync();
-                setCurrentLocation({
-                    latitude: coords.latitude,
-                    longitude: coords.longitude,
-                    latitudeDelta: 0.052,
-                    longitudeDelta: 0.026
-                });
-            }
             setPermissionStatus(status);
+            if (status === PermissionStatus.GRANTED) {
+                await animateToUserLocation();
+            }
         }
-
         checkIfUserHasLocationPermissionTurnedOn();
         mounted = false;
-    }, []);
+    }, [])
 
     useEffect(() => {
         if (currentLocation) {
@@ -67,28 +121,21 @@ export const MapScreen = () => {
         }
     }, [currentLocation]);
 
-    const colourScheme = useColorScheme() ?? 'light';
-
-    const [filteredAtmType, setFilteredAtmType] = useState<ATMType>()
-
-    const filterAtmByCode = (code?: ATMType) => {
-        _atmKeyBottomSheetRef.current?.close();
-        setFilteredAtmType(code);
-    }
 
     return (
         <View className="flex-1">
             <AlertModal
                 show={permissionStatus === PermissionStatus.UNDETERMINED}
                 title='Discover Nearby ATMs'
-                primaryAction={{ onPress: getLocation, title: 'enable' }}
+                primaryAction={{ onPress: requestUserLocationPermission, title: 'enable' }}
                 message="To provide you with the best service, we'd like to find ATMs near you. Your location will be used only for this purpose and will not be stored or shared. Please enable location services to continue."
             />
 
-            <GoogleMapView atmTypeFilter={filteredAtmType} ref={_mapViewRef} region={currentLocation} userLocation={currentLocation} />
+            <GoogleMapView ref={_mapViewRef} />
 
-            <ATMKeyView ref={_atmKeyBottomSheetRef} filterAtmByCode={filterAtmByCode} />
+            <ATMKeyView ref={_atmKeyBottomSheetRef} onBankPressed={filterAtmsByCode} />
             <ActionMenu ref={_actionMenuBottomSheetRef} />
+            <ATMDetailsView ref={_atmDetailsBottomSheetRef} />
             <View className='absolute top-0 w-full p-2 bg-transparent items-end right-5' style={{ marginTop: (StatusBar.currentHeight ?? 0) + 10 }}>
                 <View className='flex flex-row bg-transparent space-x-4'>
                     {
@@ -98,28 +145,28 @@ export const MapScreen = () => {
                                 _atmKeyBottomSheetRef.current?.close();
                                 _mapViewRef.current?.animateToRegion(currentLocation);
                             }}>
-                                <FontAwesome name="location-arrow" size={25} color={Colors[colourScheme].success} />
+                                <FontAwesome name="location-arrow" size={25} color={themeColours.success} />
                             </Pressable>
                         )
                     }
-                    <Ionicons name="refresh" size={25} color={Colors[colourScheme].success} />
+                    <Ionicons onPress={() => fetchAtmData()} name="refresh" size={25} color={themeColours.success} />
 
-                    <Pressable onPress={() => _atmKeyBottomSheetRef.current?.expand()}>
-                        <Ionicons name="key" size={25} color={Colors[colourScheme].success} />
+                    <Pressable onPress={() => expandBottomSheet('atm-keys')}>
+                        <Ionicons name="key" size={25} color={themeColours.success} />
                     </Pressable>
-                    <Pressable onPress={() => _actionMenuBottomSheetRef.current?.expand()}>
-                        <Ionicons name="ellipsis-vertical" size={25} color={Colors[colourScheme].success} />
+                    <Pressable onPress={() => expandBottomSheet('action-menu')}>
+                        <Ionicons name="ellipsis-vertical" size={25} color={themeColours.success} />
                     </Pressable>
 
                     {
                         filteredAtmType && (
-                            <Pressable onPress={() => setFilteredAtmType(undefined)}>
-                                <Ionicons name="close" size={25} color={Colors[colourScheme].success} />
+                            <Pressable onPress={clearAtmFilterType}>
+                                <Ionicons name="close" size={25} color={themeColours.success} />
                             </Pressable>
                         )
                     }
                 </View>
             </View>
-        </View >
+        </View>
     )
 }
