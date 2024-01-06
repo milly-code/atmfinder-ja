@@ -8,7 +8,7 @@ export const MapThemes = {
                     "saturation": 36
                 },
                 {
-                    "color": "#000000"
+                    "color": "#1f2937"
                 },
                 {
                     "lightness": 40
@@ -23,7 +23,7 @@ export const MapThemes = {
                     "visibility": "on"
                 },
                 {
-                    "color": "#000000"
+                    "color": "#1f2937"
                 },
                 {
                     "lightness": 16
@@ -44,7 +44,7 @@ export const MapThemes = {
             "elementType": "geometry.fill",
             "stylers": [
                 {
-                    "color": "#000000"
+                    "color": "#1f2937"
                 },
                 {
                     "lightness": 20
@@ -56,7 +56,7 @@ export const MapThemes = {
             "elementType": "geometry.stroke",
             "stylers": [
                 {
-                    "color": "#000000"
+                    "color": "#1f2937"
                 },
                 {
                     "lightness": 17
@@ -71,7 +71,7 @@ export const MapThemes = {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "color": "#000000"
+                    "color": "#1f2937"
                 },
                 {
                     "lightness": 20
@@ -83,7 +83,7 @@ export const MapThemes = {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "color": "#000000"
+                    "color": "#1f2937"
                 },
                 {
                     "lightness": 21
@@ -95,7 +95,7 @@ export const MapThemes = {
             "elementType": "geometry.fill",
             "stylers": [
                 {
-                    "color": "#000000"
+                    "color": "#1f2937"
                 },
                 {
                     "lightness": 17
@@ -107,7 +107,7 @@ export const MapThemes = {
             "elementType": "geometry.stroke",
             "stylers": [
                 {
-                    "color": "#000000"
+                    "color": "#1f2937"
                 },
                 {
                     "lightness": 29
@@ -122,7 +122,7 @@ export const MapThemes = {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "color": "#000000"
+                    "color": "#1f2937"
                 },
                 {
                     "lightness": 18
@@ -134,7 +134,7 @@ export const MapThemes = {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "color": "#000000"
+                    "color": "#1f2937"
                 },
                 {
                     "lightness": 16
@@ -146,7 +146,7 @@ export const MapThemes = {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "color": "#000000"
+                    "color": "#1f2937"
                 },
                 {
                     "lightness": 19
@@ -158,7 +158,7 @@ export const MapThemes = {
             "elementType": "geometry",
             "stylers": [
                 {
-                    "color": "#000000"
+                    "color": "#1f2937"
                 },
                 {
                     "lightness": 17
