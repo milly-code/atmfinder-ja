@@ -13,7 +13,6 @@ export const getUserCurrentLocation = async (retries: number = 3, timeoutMillise
         return await Promise.race([getCurrentPositionAsync({ accuracy: LocationAccuracy.Highest }), timeout]) as LocationObject;
     } catch (error) {
         if (retries > 0) {
-            console.log("retrying");
             return getUserCurrentLocation(retries - 1, timeoutMilliseconds);
         } else {
             throw error;

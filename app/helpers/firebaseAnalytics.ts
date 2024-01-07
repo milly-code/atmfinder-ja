@@ -1,5 +1,5 @@
-import analytics from '@react-native-firebase/analytics';
 import Constants from "expo-constants";
+import analytics from '@react-native-firebase/analytics';
 
 type AnalyticsEventPayload = {
     slug?: string;
@@ -67,7 +67,6 @@ export const logFirebaseAnalyticsEvent = async (props: LogEventType) => {
             default:
                 break;
         }
-        console.log(JSON.stringify(payload));
         await analytics().logEvent(event, payload);
     } catch (e) {
         //Unable to log event; 

@@ -6,6 +6,7 @@ import { toast } from '@backpackapp-io/react-native-toast';
 import moment from "moment-timezone";
 import { ErrorToast, InfoToast, PromiseToast, SuccessToast } from "@app/components/Toasts";
 import { logFirebaseAnalyticsEvent } from "@app/helpers/firebaseAnalytics";
+import { logFirebaseCrashalyticsEvent } from "@app/helpers/firebaseCrashalytics";
 
 type ATMCollectionRef = FirebaseFirestoreTypes.CollectionReference<ATM & {
     lastSubmissionAt?: FirebaseFirestoreTypes.Timestamp;
@@ -35,7 +36,8 @@ const atmSlicer = createSlice({
         builder
             .addCase(fetchAtmDataAsync.rejected, (_, action) => {
                 if (action.error.message) {
-                    logFirebaseAnalyticsEvent({ event: 'error_fetching_atms', error: action.error.message })
+                    logFirebaseCrashalyticsEvent(action.error.message, action.error);
+                    logFirebaseAnalyticsEvent({ event: 'error_fetching_atms', error: action.error.message });
                 }
             })
             .addCase(
@@ -84,8 +86,7 @@ export const fetchAtmDataAsync = createAsyncThunk<ATM[], undefined>(
         const queryCollection: ATMCollectionRef = firebase().collection(COLLECTION_PATH);
 
         const documentCollection = await toast.promise<AtmQuerySnapshot>(queryCollection.get(), {
-            error: (err) => {
-                console.log(err);
+            error: () => {
                 return "Unable to retrieve updated ATMs at this time. Try again, and if the issue persists contact support.";
             },
             success: "ATM Statuses updated.",

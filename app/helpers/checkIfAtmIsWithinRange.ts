@@ -32,9 +32,8 @@ export const checkIfAtmIsWithinRange = async (atmPosition: LatLng, distanceInKm:
             return 'within-range';
         }
         return 'not-in-range';
-    } catch (e) {
+    } catch (_) {
         // cannot get user's location details;
-        console.log(e);
         return 'error';
     }
 
