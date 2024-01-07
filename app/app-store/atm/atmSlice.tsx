@@ -5,6 +5,7 @@ import firebase, { FirebaseFirestoreTypes } from '@react-native-firebase/firesto
 import { toast } from '@backpackapp-io/react-native-toast';
 import moment from "moment-timezone";
 import { ErrorToast, InfoToast, PromiseToast, SuccessToast } from "@app/components/Toasts";
+import { logFirebaseAnalyticsEvent } from "@app/helpers/firebaseAnalytics";
 
 type ATMCollectionRef = FirebaseFirestoreTypes.CollectionReference<ATM & {
     lastSubmissionAt?: FirebaseFirestoreTypes.Timestamp;
@@ -32,37 +33,14 @@ const atmSlicer = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            //TODO: Figure out why these not working
-            // .addCase(updateAtmStatusAsync.pending, (state) => {
-            //     toast.loading('ATM Status updating...');
-            //     state.isBusy = true;
-            // })
-            // .addCase(updateAtmStatusAsync.rejected, (state, action) => {
-            //     toast.dismiss();
-            //     state.isBusy = false;
-            //     toast.error(action.error.message ?? "Unable to retrieve updated ATMs at this time. Try again, and if the issue persists contact support.", { duration: 10000 });
-            // })
-            // .addCase(updateAtmStatusAsync.fulfilled, (state, action: PayloadAction<ATM>) => {
-            //     toast.dismiss();
-            //     toast.success("Thanks for submitting! Eact contribution helps to keep you and the community up to date.");
-            //     state.selectedAtm = action.payload;
-            //     state.isBusy = false;
-            //     state.data = state.data.map((atm) => (atm.id === action.payload.id ? action.payload : atm));
-            // })
-            // .addCase(fetchAtmDataAsync.pending, () => {
-            //     toast.loading('Map updating...');
-            // })
-            // .addCase(fetchAtmDataAsync.rejected, (_, action) => {
-            //     if (action.error.message) {
-            //         toast.error(action.error.message ?? '', { duration: 6000 });
-            //     }
-            //     toast.error("Unable to retrieve updated ATMs at this time. Try again, and if the issue persists contact support.", { duration: 10000 });
-            // })
+            .addCase(fetchAtmDataAsync.rejected, (_, action) => {
+                if (action.error.message) {
+                    logFirebaseAnalyticsEvent({ event: 'error_fetching_atms', error: action.error.message })
+                }
+            })
             .addCase(
                 fetchAtmDataAsync.fulfilled,
                 (state, action: PayloadAction<ATM[]>) => {
-                    // toast.dismiss();
-                    // toast.success("ATM Statuses updated.", { duration: 4000 });
                     state.data = action.payload;
                     if (state.selectedAtm) {
                         state.selectedAtm = action.payload.find((atm) => atm.id === state.selectedAtm?.id)

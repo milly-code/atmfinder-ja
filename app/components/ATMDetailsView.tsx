@@ -16,6 +16,7 @@ import { useAppStoreState } from "@app/hooks/useAppStoreState";
 import { RangeStatusError, checkIfAtmIsWithinRange, truncate } from "@app/helpers";
 import { ErrorToast, InfoToast, PromiseToast, SuccessToast } from "./Toasts";
 import GorhomBottomSheet, { BottomSheetScrollView, useBottomSheet } from "@gorhom/bottom-sheet";
+import { logFirebaseAnalyticsEvent } from "@app/helpers/firebaseAnalytics";
 
 export const ATMDetailsView = forwardRef<GorhomBottomSheet>((_, bottomSheetRef) => {
     const [expanded, setExpanded] = useState<boolean>(false);
@@ -55,10 +56,11 @@ const BasicDetailsView: FC<DetailsProps> = (props) => {
 
     const { isOnline, lastSubmissionAt, displayName, shortFormattedAddress, statusInfo, latitude, longitude, id } = atm;
 
-    const onIconPressed = () => {
+    const onIconPressed = async () => {
         if (!expanded) {
             expand()
         } else {
+            await logFirebaseAnalyticsEvent({ event: 'directions_button_pressed' });
             const openMapLink = createOpenLink({
                 latitude: latitude,
                 longitude: longitude,
@@ -157,13 +159,12 @@ const UpdateAtmStatusForm: FC<FormProps> = ({ atmStatus, id, cords }) => {
             statusInfo: selectedStatus,
             lastSubmissionAt: currentDate
         });
+        await logFirebaseAnalyticsEvent({ event: 'submit_button_pressed', action: 'success' });
         return true;
     }
 
     const onSubmit = async () => {
         setIsBusy(true);
-
-
 
         if (selectedStatus) {
 
@@ -194,6 +195,11 @@ const UpdateAtmStatusForm: FC<FormProps> = ({ atmStatus, id, cords }) => {
                     fetchAtmData();
                 }
             } catch (e) {
+                if (e instanceof RangeStatusError) {
+                    await logFirebaseAnalyticsEvent({ event: 'submit_button_pressed', action: 'not_in_range' });
+                } else {
+                    await logFirebaseAnalyticsEvent({ event: 'submit_button_pressed', error_updating_atm: String(e), action: 'error' });
+                }
                 collapse();
             }
 

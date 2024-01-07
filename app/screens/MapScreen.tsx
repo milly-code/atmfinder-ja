@@ -13,8 +13,7 @@ import { useAppStoreState } from "@app/hooks/useAppStoreState";
 import { AlertModal } from "@app/components/Modals/AlertModal";
 import { ATMDetailsView } from "@app/components/ATMDetailsView";
 import { GoogleMapView } from "@app/components/MapView/GoogleMapView";
-import { getForegroundPermissionsAsync, requestForegroundPermissionsAsync, getCurrentPositionAsync, PermissionStatus, LocationAccuracy, LocationObject, } from "expo-location";
-
+import { getForegroundPermissionsAsync, requestForegroundPermissionsAsync, PermissionStatus } from "expo-location";
 
 const LATITUDE_DELTA = 0.052;
 const LONGITUDE_DELTA = 0.026;

@@ -8,6 +8,7 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { ButtonPrimary } from "@app/components/themed/Buttons";
 import { HeadingText, SubHeading, CaptionText } from "@app/components/themed/Text";
+import { logFirebaseAnalyticsEvent } from "@app/helpers/firebaseAnalytics";
 
 export const WelcomeScreen: FC = () => {
     const colourScheme = useColorScheme() ?? 'light';
@@ -15,12 +16,13 @@ export const WelcomeScreen: FC = () => {
 
     const attemptAnonymousSignIn = async () => {
         setBusy(true);
-        auth()
-            .signInAnonymously()
-            .catch((err) => {
-                toast.error("Hmm... Unexpected error occured. Try again, and if the issue persists contact support.")
-                console.log(err);
-            });
+        await logFirebaseAnalyticsEvent({ event: 'signup_button_pressed' });
+        try {
+            auth().signInAnonymously();
+        } catch (err) {
+            toast.error("Hmm... Unexpected error occured. Try again, and if the issue persists contact support.")
+            await logFirebaseAnalyticsEvent({ event: 'anonymous_signin_failed', error: String(err) });
+        }
     }
     return (
         <View className="flex-1 justify-between py-5 items-center h-screen">
