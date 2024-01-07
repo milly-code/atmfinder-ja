@@ -125,7 +125,7 @@ export const MapScreen = () => {
             <ATMKeyView ref={_atmKeyBottomSheetRef} onBankPressed={filterAtmsByCode} />
             <ActionMenu ref={_actionMenuBottomSheetRef} />
             <ATMDetailsView ref={_atmDetailsBottomSheetRef} />
-            <View className='absolute top-0 w-full p-2 bg-transparent items-end right-5' style={{ marginTop: (StatusBar.currentHeight ?? 0) + 10 }}>
+            <View className='absolute -top-10 w-full p-2 bg-transparent items-end px-4 ' style={{ marginTop: (StatusBar.currentHeight ?? 0) + 10 }}>
                 <View className='flex flex-row bg-transparent space-x-4'>
                     {
                         currentLocation && (

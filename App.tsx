@@ -11,7 +11,7 @@ import { useColorScheme } from '@app/hooks/useColorScheme';
 import { SplashScreen } from '@app/components/SplashScreen';
 import { Toasts } from '@backpackapp-io/react-native-toast';
 import { StatusBar } from '@app/components/themed/StatusBar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { DarkTheme, DefaultTheme, NavigationContainer, ThemeProvider } from '@react-navigation/native';
@@ -45,23 +45,25 @@ export default function App() {
 	return (
 		<ThemeProvider value={colourScheme === 'dark' ? DarkTheme : DefaultTheme}>
 			<SafeAreaProvider>
-				<StatusBar />
-				<View className='h-screen'>
-					<Provider store={atmStore}>
-						<GestureHandlerRootView style={{ flex: 1 }}>
-							{
-								authUser ? (
-									<NavigationContainer>
-										<AppLayout />
-									</NavigationContainer>
-								) : (
-									<WelcomeScreen />
-								)
-							}
-							<Toasts />
-						</GestureHandlerRootView>
-					</Provider>
-				</View>
+				<SafeAreaView>
+					<StatusBar />
+					<View className='h-screen'>
+						<Provider store={atmStore}>
+							<GestureHandlerRootView style={{ flex: 1 }}>
+								{
+									authUser ? (
+										<NavigationContainer>
+											<AppLayout />
+										</NavigationContainer>
+									) : (
+										<WelcomeScreen />
+									)
+								}
+								<Toasts />
+							</GestureHandlerRootView>
+						</Provider>
+					</View>
+				</SafeAreaView>
 			</SafeAreaProvider>
 		</ThemeProvider>
 	);
