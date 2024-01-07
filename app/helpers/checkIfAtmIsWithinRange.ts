@@ -39,3 +39,15 @@ export const checkIfAtmIsWithinRange = async (atmPosition: LatLng, distanceInKm:
     }
 
 }
+
+export class RangeStatusError extends Error {
+    rangeType: WithinRangeType;
+    cause?: unknown;
+    message: string;
+    constructor(rangeType: WithinRangeType, message: string, cause?: unknown) {
+        super(message);
+        this.message = message;
+        this.cause = cause;
+        this.rangeType = rangeType;
+    }
+}

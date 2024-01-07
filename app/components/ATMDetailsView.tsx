@@ -2,6 +2,7 @@ import { View } from "./themed/View";
 import { twJoin } from "tailwind-merge";
 import { ATM, ATMStatus } from "@types";
 import { Pressable } from "react-native";
+import { LatLng } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { ToggleSwitch } from "./ToggleSwitch";
 import { ButtonPrimary } from "./themed/Buttons";
@@ -12,7 +13,7 @@ import { createOpenLink } from 'react-native-open-maps';
 import { toast } from "@backpackapp-io/react-native-toast";
 import { CaptionText, SubHeading, Text } from "./themed/Text";
 import { useAppStoreState } from "@app/hooks/useAppStoreState";
-import { checkIfAtmIsWithinRange, truncate } from "@app/helpers";
+import { RangeStatusError, checkIfAtmIsWithinRange, truncate } from "@app/helpers";
 import { ErrorToast, InfoToast, PromiseToast, SuccessToast } from "./Toasts";
 import GorhomBottomSheet, { BottomSheetScrollView, useBottomSheet } from "@gorhom/bottom-sheet";
 
@@ -140,42 +141,37 @@ const UpdateAtmStatusForm: FC<FormProps> = ({ atmStatus, id, cords }) => {
     const [isBusy, setIsBusy] = useState<boolean>(false);
     const { fetchAtmData } = useAppStoreState();
 
+    const checkAndUpdate = async (atmPosition: LatLng, documentId: string, distanceInKm?: number) => {
+        const rangeStatus = await checkIfAtmIsWithinRange(atmPosition, distanceInKm);
+        if (rangeStatus !== 'within-range') {
+            const message =
+                rangeStatus === 'location-disabled' ? "Sorry, you need to enable location to update an ATM status."
+                    : rangeStatus === 'not-in-range' ? "Sorry, you need to be in proximity of the ATM to update its status. "
+                        : rangeStatus === 'error' ? "Unable to update ATM status at this time. Try again, and if the issue persists contact support."
+                            : "";
+            throw new RangeStatusError(rangeStatus, message);
+        }
+        const currentDate = firebase.Timestamp.now().toDate();
+        const document = firebase().collection('atms').doc(documentId);
+        await document.update({
+            statusInfo: selectedStatus,
+            lastSubmissionAt: currentDate
+        });
+        return true;
+    }
+
     const onSubmit = async () => {
         setIsBusy(true);
-        const rangeStatus = await checkIfAtmIsWithinRange(cords);
-        if (rangeStatus !== 'within-range') {
-            if (rangeStatus === 'location-disabled') {
-                toast.error("Sorry, you need to enable location to update an ATM status.", {
-                    customToast: (props) => <ErrorToast {...props} customHeight="h-[65px]" />
-                })
-            }
-            else if (rangeStatus === 'not-in-range') {
-                toast.error("Sorry, you need to be in proximity of the ATM to update its status. ", {
-                    customToast: (props) => <ErrorToast {...props} customHeight="h-[65px]" />
-                })
-            }
-            else if (rangeStatus === 'error') {
-                toast.error("Unable to update ATM status at this time. Try again, and if the issue persists contact support.", { duration: 10000, customToast: (props) => <ErrorToast {...props} customHeight='h-[90px]' /> });
-            }
-            collapse();
-            return;
-        }
+
 
 
         if (selectedStatus) {
 
             try {
-
-                const currentDate = firebase.Timestamp.now().toDate();
-                const document = firebase().collection('atms').doc(id);
-                await toast.promise(document.update({
-                    statusInfo: selectedStatus,
-                    lastSubmissionAt: currentDate
-                }), {
-                    error: (err) => {
-                        console.log(err);
-                        return "Hmm... Unexpected error occured. Try again, and if the issue persists contact support.";
-                    },
+                const response = await toast.promise(checkAndUpdate(cords, id), {
+                    error: (err) =>
+                        err instanceof RangeStatusError ? err.message
+                            : "Unable to update ATM status at this time. Try again, and if the issue persists contact support.",
                     success: "Thanks for submitting! Eact contribution helps to keep you and the community up to date.",
                     loading: "ATM Status updating...",
                 }, {
@@ -193,11 +189,12 @@ const UpdateAtmStatusForm: FC<FormProps> = ({ atmStatus, id, cords }) => {
                     }
                 });
 
-
-                fetchAtmData();
+                if (response) {
+                    //Only fetch if there isn't an error;
+                    fetchAtmData();
+                }
             } catch (e) {
-                console.log(e);
-                toast.error("Unable to update ATM status at this time. Try again, and if the issue persists contact support.", { duration: 10000, customToast: (props) => <ErrorToast {...props} customHeight='h-[90px]' /> });
+                collapse();
             }
 
             setIsBusy(false);
