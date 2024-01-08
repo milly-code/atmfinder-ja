@@ -1,12 +1,21 @@
 {
   "name": "atmfinder-ja",
   "version": "1.0.0",
+  "description": "ATMFinder Ja: Find Nearby Working ATMs in Jamaica",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web"
+  },
+  "author": "ATMFinder Ja Android Team",
+  "contributors": [
+    "Milton Edwards <hello@miltonedwards.com>"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/milly-code/atmfinder-ja.git"
   },
   "dependencies": {
     "@backpackapp-io/react-native-toast": "^0.10.0",
