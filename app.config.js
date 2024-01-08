@@ -1,6 +1,6 @@
 export default () => ({
   expo: {
-    name: "ATMFinder JA",
+    name: "ATMFinder Ja",
     slug: "atmfinder-ja",
     version: process.env.VERSION,
     orientation: "portrait",
@@ -22,6 +22,7 @@ export default () => ({
       supportsTablet: true,
     },
     android: {
+      versionCode: process.env.VERSION_CODE,
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#000000",
@@ -30,6 +31,7 @@ export default () => ({
       googleServicesFile: "./google-services.json",
       permissions: [
         "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.INTERNET",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.ACCESS_BACKGROUND_LOCATION",
