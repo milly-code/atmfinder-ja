@@ -1,4 +1,4 @@
-import Constants from "expo-constants";
+import { useExpoConfigs } from '@app/hooks/useExpoConfigs';
 import analytics from '@react-native-firebase/analytics';
 
 type AnalyticsEventPayload = {
@@ -36,12 +36,13 @@ type EventWithoutPayload = {
 type LogEventType = EventWithoutPayload | AnonymousSignInFailedEvent | SubmitButtonPressedEvent | FetchAtmErrorEvent;
 
 export const logFirebaseAnalyticsEvent = async (props: LogEventType) => {
+    const { slug, version, sdkVersion } = useExpoConfigs();
     try {
         const payload: AnalyticsEventPayload = {
-            slug: Constants.expoConfig?.slug,
+            slug: slug,
             app: 'android',
-            version: Constants.expoConfig?.version,
-            sdk: Constants.expoConfig?.sdkVersion,
+            version: version,
+            sdk: sdkVersion,
         }
 
         const { event } = props;

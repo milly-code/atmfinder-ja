@@ -1,15 +1,16 @@
 import { forwardRef } from "react";
 import { View } from "./themed/View";
 import { Text } from "./themed/Text";
-import Constants from "expo-constants";
 import { Pressable } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { BottomSheet } from "./themed/BottomSheet";
 import GorhomBottomSheet from "@gorhom/bottom-sheet";
 import { useColorScheme } from "@app/hooks/useColorScheme";
+import { useExpoConfigs } from "@app/hooks/useExpoConfigs";
 
 export const ActionMenu = forwardRef<GorhomBottomSheet>((_, bottomSheetRef) => {
     const { themeColours } = useColorScheme();
+    const { version } = useExpoConfigs();
     return (
         <BottomSheet
             ref={bottomSheetRef}
@@ -33,7 +34,7 @@ export const ActionMenu = forwardRef<GorhomBottomSheet>((_, bottomSheetRef) => {
                 <Pressable>
                     <View className="flex-row space-x-3 px-2 py-3.5 items-center ">
                         <FontAwesome name="info-circle" size={20} color={themeColours.tint} />
-                        <Text style={{ fontSize: 18 }}>Version: {Constants.expoConfig?.version}</Text>
+                        <Text style={{ fontSize: 18 }}>Version: {version}</Text>
                     </View>
                 </Pressable>
             </View>
