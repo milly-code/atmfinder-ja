@@ -3,29 +3,30 @@ name: EAS Build
 on:
   push:
     branches:
-      - main
-
+      - play-store-build
 jobs:
-  eas-build:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: 🏗 Setup repo
+        uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: 🏗 Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 18.x
+          cache: yarn
 
-      - name: Install Expo CLI
-        run: npm install -g expo-cli
+      - name: 🏗 Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Install EAS CLI
-        run: npm install -g eas-cli
+      - name: 📦 Install dependencies
+        run: npm install
 
-      - name: Log in to Expo
-        run: expo login -u ${{ secrets.EXPO_USERNAME }} -p ${{ secrets.EXPO_PASSWORD }}
+      - name: 🚀 Build app
+        run: eas build --platform android --profile preview
 
-      - name: EAS Build
-        run: expo eas build --platform android --profile production
+        
