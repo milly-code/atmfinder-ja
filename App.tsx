@@ -44,8 +44,8 @@ export default function App() {
 
 	return (
 		<ThemeProvider value={colourScheme === 'dark' ? DarkTheme : DefaultTheme}>
-			<SafeAreaProvider>
-				<SafeAreaView>
+			<SafeAreaProvider className='dark:bg-gray-800' style={{ flex: 1, justifyContent: 'flex-end' }}>
+				<SafeAreaView className='dark:bg-gray-800'>
 					<StatusBar />
 					<View className='h-screen'>
 						<Provider store={atmStore}>
